@@ -88,4 +88,3 @@ if __name__ == '__main__':
     print("{} postings scraped\n".format(len(postings)))
 
     print_jobs(postings)
-    print("{} postings scraped".format(len(postings)))
