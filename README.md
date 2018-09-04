@@ -1,2 +1,2 @@
 # Scrapers
-Simple scripts to scrape data from Google Maps and Twitter. 
+A collection of simple web scraping tools to gather data from Google Maps, Twitter, job websites, and more.
