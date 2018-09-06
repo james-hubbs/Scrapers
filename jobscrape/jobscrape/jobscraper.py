@@ -7,9 +7,10 @@ import sys
 import urllib.request
 import time
 import json
+import csv
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from jobscrape.initialize import check
+from jobscrape.initialize import check, update_user_data
 from jobscrape.sites import indeed, ziprecruit
 
 
@@ -53,8 +54,25 @@ def print_jobs(jobs):
         print('Title: {}\nCompany: {}\nLocation: {}\nSummary: {}\nLink: {}\n'.format(job['title'], job['company'], job['location'], job['summary'], job['link']))
 
 
+def write_csv(jobs):
+    """Writes a list of jobs to csv file"""
+
+    with open("data/jobs.csv", 'w', newline='') as file:
+        writer = csv.writer(file)
+
+        # Headers
+        writer.writerow(['Title', 'Company', 'Location', 'Summary', 'Link'])
+
+        # Write each job to a new row
+        for job in jobs:
+            writer.writerow([job['title'], job['company'], job['location'], job['summary'], job['link']])
+
+        print("\nCreated jobs.csv in {}\data".format(os.getcwd()))
+
+
 def scrape():
-    """Scrapes job postings"""
+    """Scrapes recent job postings from indeed.com and ziprecruiter.com"""
+
     # Read data from userdata.json
     with open('data/userdata.json', 'r') as file:
         user_data = json.load(file)
@@ -79,12 +97,32 @@ def scrape():
 
 if __name__ == '__main__':
 
-    # Check that data directory and userdata.json exist
-    check()
+    # Check if data/userdata.json exists
+    exists = check()
+
+    if exists:
+        # Read data from userdata.json
+        with open('data/userdata.json', 'r') as file:
+            user_data = json.load(file)
+
+            # Ask to update
+            print("Current query values are keywords={}, location={}, radius={}".format(user_data['keywords'], user_data['location'], user_data['radius']))
+            update = input("Update search query values? (Y/N):").strip().lower()
+            if update == 'y':
+                update_user_data()
+
+    else:
+        update_user_data()
 
     print("Scraping...\n")
     postings = scrape()
 
-    print("{} postings scraped\n".format(len(postings)))
+    print("{} job postings scraped".format(len(postings)))
 
-    print_jobs(postings)
+    view = input("Print postings? (Y/N):").strip().lower()[0]
+    if view == 'y':
+        print_jobs(postings)
+
+    write = input("Write to CSV? (Y/N):").strip().lower()[0]
+    if write == 'y':
+        write_csv(postings)

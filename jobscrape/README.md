@@ -1,2 +1,3 @@
-#### jobscrape: a simple web scraping tool for job postings. 
-This is a work in progress; Additional functionality and sources will be added.  Currently supported sources are indeed.com and ziprecruiter.com. 
+#### JobScrape 
+***	
+A simple web scraping tool to speed up your job search. This is a work in progress; Additional functionality and sources will be added.  Currently supported sources are indeed.com and ziprecruiter.com. 
