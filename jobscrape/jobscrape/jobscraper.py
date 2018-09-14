@@ -11,12 +11,12 @@ import csv
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from jobscrape.initialize import check, update_user_data
-from jobscrape.sites import indeed, ziprecruit
+from jobscrape.sites import indeed, ziprecruit, monster
 
 
 def request_html(link):
     """
-    Attempts to read HTML data from provided link.
+    Attempts to read HTML file from provided link.
     Will retry 3 times if error occurs.
 
     """
@@ -51,7 +51,7 @@ def request_html(link):
 def print_jobs(jobs):
     """Prints a list of jobs"""
     for job in jobs:
-        print('Title: {}\nCompany: {}\nLocation: {}\nSummary: {}\nLink: {}\n'.format(job['title'], job['company'], job['location'], job['summary'], job['link']))
+        print('Title: {}\nCompany: {}\nLocation: {}\nSummary: {}...\nLink: {}\n'.format(job['title'], job['company'], job['location'], job['summary'][:150], job['link']))
 
 
 def write_csv(jobs):
@@ -71,7 +71,7 @@ def write_csv(jobs):
 
 
 def scrape():
-    """Scrapes recent job postings from indeed.com and ziprecruiter.com"""
+    """Scrapes recent job postings from indeed.com, ziprecruiter.com, and monster.com"""
 
     # Read data from userdata.json
     with open('data/userdata.json', 'r') as file:
@@ -79,7 +79,7 @@ def scrape():
 
     # URLs
     zip_url = 'https://www.ziprecruiter.com/candidate/search?search={}&location={}&days=5&radius={}' \
-              '&refine_by_tags=employment_type%3Ainternship'.format(user_data['keywords'],
+                                                                    .format(user_data['keywords'],
                                                                     user_data['location'],
                                                                     user_data['radius'])
 
@@ -87,13 +87,28 @@ def scrape():
                                                                                     user_data['location'],
                                                                                     user_data['radius'])
 
+    monster_url = 'https://www.monster.com/jobs/search/?q={}&where={}&rad={}&tm=3'.format(user_data['keywords'],
+                                                                    user_data['location'],
+                                                                    user_data['radius'])
+    # Scrape Ziprecruiter
+    print("Scraping Ziprecruiter...")
     zip_html = request_html(zip_url)
-    indeed_html = request_html(indeed_url)
-
     zip_jobs = ziprecruit.get_jobs(zip_html)
-    indeed_jobs = indeed.get_jobs(indeed_html)
+    print("{} positions scraped\n".format(len(zip_jobs)))
 
-    return zip_jobs + indeed_jobs
+    # Scrape Indeed
+    print("Scraping Indeed...")
+    indeed_html = request_html(indeed_url)
+    indeed_jobs = indeed.get_jobs(indeed_html)
+    print("{} positions scraped\n".format(len(indeed_jobs)))
+
+    # Scrape Monster
+    print("Scraping Monster...")
+    monster_html = request_html(monster_url)
+    monster_jobs = monster.get_jobs(monster_html)
+    print("{} positions scraped\n".format(len(monster_jobs)))
+
+    return zip_jobs + indeed_jobs + monster_jobs
 
 if __name__ == '__main__':
 
@@ -114,12 +129,9 @@ if __name__ == '__main__':
     else:
         update_user_data()
 
-    print("Scraping...\n")
     postings = scrape()
 
-    print("{} job postings scraped".format(len(postings)))
-
-    view = input("Print postings? (Y/N):").strip().lower()[0]
+    view = input("Print postings? (Y/N):\n").strip().lower()[0]
     if view == 'y':
         print_jobs(postings)
 
