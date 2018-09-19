@@ -39,8 +39,8 @@ def scrape(hashtags, n, consumer_keys, access_keys):
             user = tweet.user.screen_name
             num_followers = tweet.user.followers_count
             tags = [hashtag['text'] for hashtag in tweet._json['entities']['hashtags']]
-            text = tweet.full_text.replace('\n', ' ')
-            text = re.sub(r'[^\x00-\x7f]', r'', text)  # Remove non-ascii characters
+            text = tweet.full_text
+            text = clean_tweet(text)
 
             results.append({"time": timestamp, "user": user, "num_followers": num_followers, "hashtags": tags, "text": text})
 
@@ -48,6 +48,14 @@ def scrape(hashtags, n, consumer_keys, access_keys):
         print(e.reason)
 
     return results
+
+
+def clean_tweet(text):
+    text = text.replace('\n', ' ')
+    text = re.sub(r'[^\x00-\x7f]', r'', text)  # Remove non-ascii characters
+    text = re.sub(r'http\S+', '', text)  # Remove links
+
+    return text
 
 
 def write_csv(tweets, file_name):
