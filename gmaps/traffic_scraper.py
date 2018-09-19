@@ -34,13 +34,14 @@ def scrape(begin, end, key, period, duration, file_name):
     api_key = 'key=' + key
 
     url = base + locations + extras + api_key
-
     # Request data and convert from json to dictionary
     data = json.loads(request_data(url))
     # Close program if API key or location were invalid
     check_data(data)
 
     # Write data into the data directory
+    if not os.path.exists('data/'):
+        os.mkdir('data')
     os.chdir('.\data')
 
     print("Scraping...")
@@ -108,6 +109,10 @@ def request_data(link):
 
 def check_data(data):
     """Closes program if API key or location were invalid"""
+
+    if data['status'] == "OVER_QUERY_LIMIT":
+        print("Query limit reached")
+        sys.exit()
 
     # Check to ensure access was granted
     if data['status'] == 'REQUEST_DENIED':
